@@ -1,0 +1,66 @@
+html.login-pf, .login-pf body {
+  background: #fff;
+  color: #121a28;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.login-pf-page {
+  padding-top: 0;
+}
+#kc-header {
+  margin: 0;
+  border-bottom: 1px solid #e5e8ec;
+  color: #121a28;
+  text-align: left;
+}
+#kc-header-wrapper {
+  max-width: 1280px;
+  margin: auto;
+  padding: 25px 24px;
+  font-size: 1.95rem;
+  font-weight: 800;
+  letter-spacing: -.06em;
+  text-transform: none;
+}
+#kc-header-wrapper .kc-logo-text {
+  color: #121a28;
+}
+.login-pf-page .card-pf {
+  max-width: 440px;
+  width: calc(100% - 48px);
+  margin: clamp(36px, 9vw, 115px) auto;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+#kc-page-title {
+  color: #121a28;
+  font-size: clamp(1.75rem, 5vw, 2.45rem);
+  font-weight: 800;
+  letter-spacing: -.035em;
+}
+#kc-form-login input.form-control {
+  min-height: 47px;
+  padding: 10px 13px;
+  color: #121a28;
+  border: 1px solid #e5e8ec;
+  border-radius: 8px;
+  background: #f2f3f5;
+  box-shadow: none;
+}
+#kc-login {
+  min-height: 47px;
+  border: 1px solid #00df32;
+  border-radius: 999px;
+  color: #121a28;
+  background: #00df32;
+  font-weight: 700;
+  box-shadow: none;
+}
+#kc-login:hover {
+  background: #00c92e;
+}
+#kc-login:focus-visible, #kc-form-login input:focus-visible {
+  outline: 3px solid #087139;
+  outline-offset: 3px;
+}
+

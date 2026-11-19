@@ -1,0 +1,157 @@
+{
+  "realm": "agritech",
+  "displayName": "AgriTech",
+  "loginTheme": "agritech",
+  "enabled": true,
+  "registrationAllowed": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "super_admin"
+      },
+      {
+        "name": "auditor"
+      },
+      {
+        "name": "stakeholder"
+      },
+      {
+        "name": "farmer"
+      },
+      {
+        "name": "landowner"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "agritech-web",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "local-web-client",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/auth/callback"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:3000"
+      },
+      "protocolMappers": [
+        {
+          "name": "AgriTech API audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "agritech-api",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "agritech-api",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "local-api-client",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false
+    }
+  ],
+  "users": [
+    {
+      "username": "superadmin",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "superadmin@example.test",
+      "firstName": "Demo",
+      "lastName": "super_admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "AgriTechDemo123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "super_admin"
+      ]
+    },
+    {
+      "username": "auditor",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "auditor@example.test",
+      "firstName": "Demo",
+      "lastName": "auditor",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "AgriTechDemo123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "auditor"
+      ]
+    },
+    {
+      "username": "stakeholder",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "stakeholder@example.test",
+      "firstName": "Demo",
+      "lastName": "stakeholder",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "AgriTechDemo123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "stakeholder"
+      ]
+    },
+    {
+      "username": "farmer",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "farmer@example.test",
+      "firstName": "Demo",
+      "lastName": "farmer",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "AgriTechDemo123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "farmer"
+      ]
+    },
+    {
+      "username": "landowner",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "landowner@example.test",
+      "firstName": "Demo",
+      "lastName": "landowner",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "AgriTechDemo123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "landowner"
+      ]
+    }
+  ]
+}
