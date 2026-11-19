@@ -1,20 +1,26 @@
 "use client";
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { demoChange, readDemo, writeDemo, trackChange, recordActivity } from "../../lib/demo-store";
+import type { Module } from "../../lib/demo-model";
 
 export function useDemoState<T,>(key: string, fallback: T) {
-  const storageKey = "agritech-preview-v1:" + key;
   const [value, setValue] = useState(fallback);
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved !== null) setValue(JSON.parse(saved) as T);
-    } catch {}
-  }, [storageKey]);
+    const refresh = () => setValue(readDemo(key, fallback));
+    refresh();
+    window.addEventListener(demoChange, refresh);
+    window.addEventListener("storage", refresh);
+    return () => { window.removeEventListener(demoChange, refresh); window.removeEventListener("storage", refresh); };
+    // A key identifies a stable persisted record; fallback literals need not resubscribe.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   function update(next: T) {
+    const previous = readDemo(key, value);
     setValue(next);
-    try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch {}
+    writeDemo(key, next);
+    trackChange(key, previous, next);
   }
   return [value, update] as const;
 }
@@ -63,6 +69,10 @@ export function DemoForm({ id, fields, actions, children, onSubmit }: {
     const action = (event.nativeEvent as SubmitEvent).submitter?.getAttribute("value") ?? actions[0];
     const values = Object.fromEntries(Array.from(new FormData(event.currentTarget), ([key, value]) => [key, String(value)]));
     const message = onSubmit?.(action, values) ?? "Saved in this demo: " + action;
+    if (!onSubmit) {
+      const [, , module, section] = location.pathname.split("/");
+      if (["governance", "cultivation", "market", "transport", "storage"].includes(module)) recordActivity({ module: module as Module, section, actor: "Demo operator", action, reference: id, before: record.message || "Not recorded", after: action, notes: Object.entries(values).map(([label, value]) => `${label}: ${value}`).join("; "), href: location.pathname });
+    }
     save({ values, message });
   }
   return <form className="panel-form" onSubmit={submit}>

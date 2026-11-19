@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { InventoryForecast } from "../shared/insights";
 import { History } from "../shared/history";
 import { DemoForm, Metrics, Panel, ReportButton, Status, Table, useDemoState } from "../shared/ui";
 
@@ -15,6 +16,7 @@ export function Storage({ screen }: { screen: string }) {
   const [stock, saveStock] = useDemoState("warehouse-stock", { cold: 6, dry: 12, moves: initialMovements });
   const total = warehouse.cold + warehouse.dry;
   const used = stock.cold + stock.dry;
+  if (screen === "forecast") return <InventoryForecast />;
   if (screen === "settings") return <>
     <Metrics items={[["Warehouse", "WH-008", warehouse.name], ["Total capacity", total.toFixed(1) + " t", warehouse.cold + " t cold · " + warehouse.dry + " t dry"],
       ["Current occupancy", Math.round(used / total * 100) + "%", used.toFixed(1) + " t / " + total.toFixed(1) + " t"]]} />

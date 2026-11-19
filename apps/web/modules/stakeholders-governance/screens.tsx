@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { BankReview, Ledger, Agriculture, LandAuthority } from "./reviews";
+import { ActivityHistory, InventoryForecast, TransactionChart, useTransactions } from "../shared/insights";
 import { useState } from "react";
 import { previewPath, flows } from "../../lib/preview";
 import { DemoForm, Metrics, Panel, ReportButton, Status, Table, Tabs, useDemoState } from "../shared/ui";
@@ -36,21 +38,9 @@ function Dashboard() {
     <Metrics items={[["Registered accounts", "1,248"], ["Pending registrations", String(pending)],
       ["Open escrow disputes", String(3 - Object.values(disputes).filter(s => s === "Resolved").length)],
       ["Open AI Investigations", String(3 - alerts.slice(0, 3).filter(([id]) => investigations[id] === "Cleared").length)]]} />
-    <Panel title="Transaction activity">
-      <div className="heading"><div><h2>LKR 4.82M</h2><small>Completed transaction value · last 7 days</small></div>
-        <div><small>14–20 Oct 2026</small> <Status tone="good">+12.4% vs prior week</Status></div></div>
-      <svg className="chart" viewBox="0 0 1000 110" preserveAspectRatio="none" role="img" aria-label="Sample transaction activity trends upward from 14 to 20 October">
-        <path d="M0 5H1000 M0 55H1000 M0 105H1000" stroke="#e5e8ec" fill="none" />
-        <polyline points="0,99 166,82 333,88 500,50 666,66 833,22 1000,7" fill="none" stroke="#00cd43" strokeWidth="3" vectorEffect="non-scaling-stroke" />
-      </svg>
-      <div className="chart-labels">{[14, 15, 16, 17, 18, 19, 20].map(day => <span key={day}>{day} Oct</span>)}</div>
-    </Panel>
-    <Panel title="Latest admin activity"><div className="activity">
-      {[["09:24 AM", "Escrow case ESC-2041 assigned", "R. Jayasinghe · Quality mismatch", "disputes"],
-        ["09:18 AM", "AI-0842 escalated for review", "Risk engine · 94% confidence", "investigations"],
-        ["09:05 AM", "Identity service synced", "Keycloak · 1,248 accounts in sync", "identity"]].map(([time, title, detail, route]) =>
-        <div key={time}><small>{time}</small><Link className="text-button" href={previewPath("governance", route)}>{title}</Link><small>{detail}</small></div>)}
-    </div></Panel>
+    <TransactionChart />
+    <InventoryForecast compact />
+
   </>;
 }
 
@@ -204,17 +194,20 @@ const reportRows = [
 ];
 
 function Reports() {
+  const ledger = useTransactions();
+  const completed = ledger.filter(row => row.status === "Settled");
+  const completedValue = money(completed.reduce((sum, row) => sum + row.gross, 0));
   const [states] = useDemoState<Record<string, string>>("case-status", {});
   const [decisions] = useDemoState<Record<string, string>>("ai-status", {});
   const [users] = useDemoState<Record<string, string>>("identity-status", {});
   const reports = [
-    [["Metric", "Value"], ["Completed transaction value", "LKR 12.46M"], ["Completed transactions", 186], ["Registrations approved", 124]],
+    [["Metric", "Value"], ["Completed transaction value", completedValue], ["Completed transactions", completed.length], ["Registrations approved", 124]],
     [["Case", "Transaction", "Amount", "Status"], ...cases.map(([id, txn, , , amount, status]) => [id, txn, amount, states[id] ?? status])],
     [["Alert", "Signal", "Confidence", "Status"], ...alerts.map(([id, , signal, , confidence, status]) => [id, signal, confidence, decisions[id] ?? status])],
     [["User", "Role", "Status"], ...directory.map(([name, , role, status]) => [name, role, users[name] ?? status])],
   ];
   return <>
-    <Metrics items={[["Completed transaction value", "LKR 12.46M"], ["Completed transactions (1–20 Oct 2026)", "186"], ["Registrations approved", "124"]]} />
+    <Metrics items={[["Completed transaction value", completedValue], ["Completed transactions · all records", String(completed.length)], ["Registrations approved", "124"]]} />
     <ReportButton name="agritech-performance" rows={reports[0]}>Export summary</ReportButton>
     <h2>Available reports</h2>
     <Table columns={["Report", "Period", "Format", "Export"]} rows={reportRows.map(([report, detail, period], index) => [
@@ -223,11 +216,9 @@ function Reports() {
   </>;
 }
 
-function Bank({ screen }: { screen: string }) {
+function Bank() {
   const [offers, save] = useDemoState<string[][]>("loan-offers", []);
-  const [decisions, setDecisions] = useDemoState<Record<string, string>>("loan-decisions", {});
-  const [selected, select] = useState("LN-101");
-  if (screen === "offers") return <>
+  return <>
     <Panel title="Publish New Bank Offer"><DemoForm id="bank-offer" fields={[
       ["Offer title"], ["Bank"], ["Annual interest rate", "", "number"], ["Tenure"], ["Loan range"], ["Application closing date", "", "date"], ["Eligibility & terms", "", "textarea"],
     ]} actions={["Publish New Loan Offer", "Save Draft"]} onSubmit={(action, values) => {
@@ -236,36 +227,12 @@ function Bank({ screen }: { screen: string }) {
     }} /></Panel>
     <Table columns={["Offer", "Bank", "Status"]} rows={offers} />
   </>;
-  return <>
-    <Table columns={["Application", "Applicant", "Requested amount", "Consent", "Status"]} rows={[
-      ["LN-101", "Kavindu Silva", "LKR 250,000"], ["LN-102", "Harvest Hub", "LKR 500,000"],
-    ].map(([id, applicant, amount]) => [
-      <button className="text-button" onClick={() => select(id)}>{id}</button>, applicant, amount, "Granted (demo)", decisions[id] ?? "Awaiting review",
-    ])} />
-    <Panel title={selected + " · Application review"}><DemoForm key={selected} id={"loan:" + selected}
-      fields={[["Bank officer review note", "", "textarea"]]} actions={["Record review", "Request supporting documents"]}
-      onSubmit={action => { setDecisions({ ...decisions, [selected]: action === "Record review" ? "Reviewed" : "Documents requested" }); return "Application updated in the demo."; }} />
-    </Panel>
-  </>;
 }
 
 function Authorities({ screen }: { screen: string }) {
   const [selected, select] = useState("");
   const [reviews, save] = useDemoState<Record<string, string>>("authority-reviews", {});
-  const [checks, saveChecks] = useDemoState("authority-checks", { ownership: false, suitability: false });
   const [zoom, setZoom] = useState(1);
-  if (screen === "land") return <Panel title="Land Registry & Environmental Authority · deed review">
-    <div className="split">
-      <div className="notice"><h3>LAND DEED · DEMO COPY</h3><p>Applicant · Ruwan Fernando<br />Deed reference · 2026 / KUR / 027<br />LD-027 · 3.0 acres · Polgahawela</p>
-        <details><summary>Open Deed</summary><p>Sample ownership record for LD-027.</p></details><details><summary>View Survey Plan</summary><p>Sample survey · 3.0 acres.</p></details>
-      </div>
-      <div><Status tone={checks.ownership && checks.suitability ? "good" : "warn"}>{checks.ownership && checks.suitability ? "Both verified in demo" : "Verification pending"}</Status>
-        <label className="check"><input type="checkbox" checked={checks.ownership} onChange={event => saveChecks({ ...checks, ownership: event.target.checked })} /> Land Registry Ownership Verified</label>
-        <label className="check"><input type="checkbox" checked={checks.suitability} onChange={event => saveChecks({ ...checks, suitability: event.target.checked })} /> Environmental Authority Suitability Verified</label>
-      </div>
-    </div>
-    <DemoForm id="authority-land" fields={[["Authority review / rejection reason", "", "textarea"]]} actions={["Save Verification Review", "Trigger Rejection Notice"]} />
-  </Panel>;
   if (screen === "demand") {
     const rows = [["Kurunegala · LST-052", "500 kg tomatoes", "1,200 kg", "Within Local Demand Threshold"],
       ["Matale · LST-061", "2,000 kg potatoes", "1,000 kg", "Sale Blocked"]];
@@ -285,27 +252,23 @@ function Authorities({ screen }: { screen: string }) {
     <details><summary>View Observation</summary><p>T-018 / LD-018 · Possible early blight · Illustrative confidence 87% · Field assessment required.</p></details>
     <DemoForm id="field-visit" fields={[["Field visit date", "", "date"]]} actions={["Schedule Field Visit"]} />
   </Panel>;
-  const cultivation = screen === "plans";
-  const rows = cultivation ? [
-    ["PL-017", "Kavindu Silva", "LD-018 · Tomato / 2.0 ac", "96% soil fit · drip irrigation", "Pending officer review"],
-    ["PL-020", "Asha Fernando", "LD-012 · Chilli / 1.5 ac", "89% soil fit · well water", "Pending officer review"],
-  ] : [
+  const rows = [
     ["WH-021", "Matale Agro Store", "8 t cold / 12 t dry", "Safety certificate attached", "Pending inspection"],
     ["WH-022", "Kurunegala Grain Hub", "0 t cold / 25 t dry", "Fire certificate missing", "Missing details"],
   ];
   const record = rows.find(([id]) => id === selected) ?? rows[0];
   return <>
-    <Panel title={cultivation ? "Agricultural Officer · cultivation plan queue" : "Consumer Affairs Authority · inspection queue"}>
-      <Table columns={cultivation ? ["Plan / applicant", "Plot / crop", "AI crop data", "Review status"] : ["Warehouse / application", "Capacity", "Evidence", "Inspection status"]}
+    <Panel title="Consumer Affairs Authority · inspection queue">
+      <Table columns={["Warehouse / application", "Capacity", "Evidence", "Inspection status"]}
         rows={rows.map(([id, name, description, evidence, status]) => [
           <button className="text-button" onClick={() => select(id)}>{id} · {name}</button>, description, evidence, reviews[id] ?? status,
         ])} />
     </Panel>
-    <Panel title={cultivation ? "Selected cultivation plan" : "Selected warehouse review"}>
+    <Panel title="Selected warehouse review">
       <p>{record[0]} · {record[1]} · {record[2]} · {record[3]}</p>
-      <DemoForm key={record[0]} id={"authority:" + record[0]} fields={[[cultivation ? "Officer review note" : "Inspector note", "", "textarea"]]}
-        actions={cultivation ? ["Approve Plan", "Revise Plan"] : ["Verify Warehouse", "Missing Details"]} onSubmit={action => {
-          save({ ...reviews, [record[0]]: action === "Approve Plan" ? "Approved" : action === "Verify Warehouse" ? "Verified" : action });
+      <DemoForm key={record[0]} id={"authority:" + record[0]} fields={[["Inspector note", "", "textarea"]]}
+        actions={["Verify Warehouse", "Missing Details"]} onSubmit={action => {
+          save({ ...reviews, [record[0]]: action === "Verify Warehouse" ? "Verified" : action });
           return "Review saved in the demo.";
         }} />
     </Panel>
@@ -323,19 +286,21 @@ export function GovernanceScreen({ screen }: { screen: string }) {
     {screen === "investigations" && <Investigations />}
     {screen === "identity" && <Identity />}
     {screen === "reports" && <Reports />}
-    {(screen === "offers" || screen === "applications") && <Bank screen={screen} />}
-    {screen === "ledger" && <Panel title="Verified transaction ledger">
-      <Table columns={["Transaction", "Counterparty", "Amount", "Status"]}
-        rows={[["TX-2051", "Green Basket Co.", "LKR 125,000", "Held"], ["TX-2040", "Dilhani Farm", "LKR 84,000", "Released"]]} />
-      <div><Link className="button" href="/governance">Open protected escrow ledger</Link></div>
-    </Panel>}
+    {screen === "offers" && <Bank />}
+    {screen === "applications" && <BankReview />}
+    {screen === "plans" && <Agriculture />}
+    {screen === "land" && <LandAuthority />}
+    {screen === "ledger" && <Ledger />}
     {screen === "audit" && <Panel title="Financial Auditor · AI anomaly detection scanner">
-      <p className="notice warn"><strong>Flagged activity · TX-2051 · LKR 125,000</strong><br />Three attempts from a newly added device in 12 minutes. Case CASE-A019 is open.</p>
+      <p className="notice warn"><strong>Flagged activity · TX-2051 · LKR 75,200</strong><br />Three attempts from a newly added device in 12 minutes. Case CASE-A019 is open.</p>
       <DemoForm id="audit-review" fields={[["Scanner scope", "22 Oct · gateway and escrow events"], ["Audit classification", "Needs corroboration"],
         ["Evidence reviewed", "Gateway event log · masked device metadata"], ["Auditor note", "", "textarea"]]} actions={["Review Flagged Activity"]} />
       <ReportButton name="agritech-audit" rows={[["Case", "Transaction", "Classification"], ["CASE-A019", "TX-2051", "Needs corroboration"]]}>Generate Demo Audit Report</ReportButton>
     </Panel>}
-    {["plans", "monitoring", "warehouses", "demand", "land"].includes(screen) && <Authorities screen={screen} />}
+    {["monitoring", "warehouses", "demand"].includes(screen) && <Authorities screen={screen} />}
+    {(screen === "history" || screen === "dashboard") ? <ActivityHistory module="governance" /> : screen.endsWith("-history") ? <>
+      {(screen === "bank-history" ? ["offers", "applications"] : screen === "auditor-history" ? ["ledger", "audit"] : screen === "agriculture-history" ? ["plans", "monitoring"] : screen === "land-history" ? ["land"] : ["warehouses", "demand"]).map(section => <ActivityHistory key={section} module="governance" section={section} />)}
+    </> : <ActivityHistory module="governance" section={screen} />}
   </>;
 }
 

@@ -9,6 +9,7 @@ export function Cultivation({ screen }: { screen: string }) {
   const [harvest, saveHarvest] = useDemoState("harvest-estimate", { date: "", quantity: "" });
   const [requests, saveRequests] = useDemoState<string[][]>("land-requests", []);
   const [plans, savePlans] = useDemoState<string[][]>("cultivation-plans", []);
+  const [planReviews] = useDemoState<Record<string, string>>("authority-reviews", {});
   const [visits, saveVisits] = useDemoState("crop-health-status", "Field review needed");
   const [crop, selectCrop] = useState("Tomato");
   const [payment, savePayment] = useDemoState("lease-payment", "Pending");
@@ -64,7 +65,7 @@ export function Cultivation({ screen }: { screen: string }) {
       actions={["Submit plan for review"]} onSubmit={(_, values) => {
         savePlans([...plans, [values.Plot, values.Crop, values["Planting date"], "Pending officer review"]]); return "Sample plan submitted.";
       }} /></Panel>
-    <Table columns={["Plot", "Crop", "Planting date", "Status"]} rows={plans} />
+    <Table columns={["Plot", "Crop", "Planting date", "Status"]} rows={plans.map((row, i) => [row[0], row[1], row[2], planReviews[`SUB-${i}`] ?? row[3]])} />
   </>;
   if (screen === "health") return <Panel title="Crop observation · T-018">
     <Status tone="warn">{visits}</Status><p>Possible early blight · 87% illustrative confidence. Confirm the observation with an agricultural officer.</p>

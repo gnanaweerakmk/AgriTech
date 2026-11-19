@@ -25,6 +25,20 @@ Open [AgriTech](http://localhost:3000) and select **Explore the demo**. Switch w
 
 The design was adapted for responsive web layouts. The sample workflows use browser data. The Go/PostgreSQL service currently supports the protected escrow ledger. Real registration, document collection, identity administration, cross-module persistence, AI, GPS, gateway payments, and native mobile clients require additional implementation.
 
+### Dashboard and review demo
+
+Use **Menu** to switch modules and governance destinations. The former Role workspaces URL redirects to the admin dashboard. Each module has History, and governance reviews also have section and record timelines. Successful demo changes are saved in this browser and update connected views.
+
+- **Admin:** interactive daily transaction metrics and an inventory forecast summary. Chart totals and report exports use the same sample ledger as the auditor.
+- **Bank Officer → Loan Applications:** inline document previews with optional PDF downloads, past loans, platform transactions, and explanatory sample credit assessments. LN-103 demonstrates insufficient history; LN-104 demonstrates missing data-access consent.
+- **Auditor → Platform Ledger:** filter transactions, inspect fees, settlements, refunds and event timelines, export CSV records, and save separate review notes.
+- **Authorities:** Agriculture Department lists plots and illustrative crop predictions. Land Registration Authority records ownership and suitability decisions separately; suitability approval requires verified ownership. Warehouse and demand tools remain available in the menu.
+- **Storage → Inventory Forecast:** a 14-day projection from the preceding seven calendar days of recorded movements. Initial sample observations cover 14–20 October 2026; later days without movements count as zero flow. Posted stock changes update the projection. WH-021 demonstrates insufficient history.
+
+Credit and crop assessments are matched fictional model responses. Inventory projections use a simple daily-average calculation. None are trained AI predictions or official financial, land, or agricultural assessments. Bundled PDFs and preview images under `apps/web/public/demo` contain fictional records only. Browser activity history is a demonstration, not an immutable audit log.
+
+From `apps/web`, run `npm.cmd test`, `npm.cmd run typecheck`, and `npm.cmd run build` to validate the demo.
+
 ## Run the protected escrow ledger
 
 Start Docker Desktop with Linux containers. From the project root:

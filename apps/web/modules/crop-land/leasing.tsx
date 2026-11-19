@@ -22,7 +22,7 @@ export default async function Leasing({ searchParams }: {
 }) {
   const [workspace, feedback] = await Promise.all([apiRequest<Workspace>(endpoint), searchParams]);
   return <main className="shell content">
-    <div className="links"><Link className="secondary" href="/preview/roles">Role workspaces</Link></div>
+    <div className="links"><Link className="secondary" href="/preview/governance/dashboard">Dashboard</Link></div>
     <h1>Land leasing</h1>
     {feedback.saved && <p role="status">Lease workspace updated.</p>}
     {feedback.error && <p role="alert">{feedback.error}</p>}
